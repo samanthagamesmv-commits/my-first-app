@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bunsho-check-v1';
+const CACHE_NAME = 'bunsho-check-v2';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -26,8 +26,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Anthropicへの通信は絶対にキャッシュせず、常にネットワークへ素通しする
-  if (url.hostname.includes('anthropic.com')) {
+  // Google Gemini APIへの通信は絶対にキャッシュせず、常にネットワークへ素通しする
+  if (url.hostname.includes('generativelanguage.googleapis.com')) {
     return;
   }
 
