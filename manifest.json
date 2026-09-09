@@ -1,0 +1,25 @@
+{
+  "name": "文チェック — 送る前にひと呼吸",
+  "short_name": "文チェック",
+  "description": "配信のコメントやDMを送る前に、日本語の抜けや意図の伝わりにくさを確認するツール",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#16121F",
+  "theme_color": "#16121F",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

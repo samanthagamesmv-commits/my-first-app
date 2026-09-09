@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文チェック — 送る前にひと呼吸</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16121F">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #16121F;
+    --panel: #201A2E;
+    --panel-2: #271F39;
+    --line: #3A3050;
+    --text: #F2EEF9;
+    --text-dim: #9C8FB8;
+    --pink: #FF6FA0;
+    --cyan: #5FE8D6;
+    --warn: #FFC65A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, #2A1F42 0%, transparent 45%),
+      radial-gradient(circle at 100% 30%, #1E2E3A 0%, transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    padding:32px 20px 80px;
+  }
+  .wrap{ max-width:640px; margin:0 auto; }
+
+  .brand{
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:6px;
+  }
+  .brand-left{ display:flex; align-items:baseline; gap:10px; }
+  .brand .mark{
+    font-weight:900; font-size:15px; letter-spacing:.02em;
+    color:var(--bg); background:var(--cyan);
+    padding:3px 9px; border-radius:6px;
+  }
+  .brand h1{ font-size:20px; margin:0; font-weight:700; }
+  .sub{ color:var(--text-dim); font-size:13.5px; line-height:1.7; margin:0 0 20px; }
+
+  .keybtn{
+    background:none; border:1px solid var(--line); color:var(--text-dim);
+    font-family:inherit; font-size:12px; padding:5px 12px; border-radius:100px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .keybtn:hover{ color:var(--text); border-color:var(--text-dim); }
+  .keybtn.set{ color:var(--cyan); border-color:rgba(95,232,214,.4); }
+
+  .keypanel{
+    display:none; background:var(--panel); border:1px solid var(--line);
+    border-radius:14px; padding:14px 16px; margin-bottom:16px;
+  }
+  .keypanel.show{ display:block; }
+  .keypanel p{ margin:0 0 10px; font-size:12.5px; color:var(--text-dim); line-height:1.7; }
+  .keypanel .row{ display:flex; gap:8px; }
+  .keypanel input{
+    flex:1; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:8px; color:var(--text); font-family:inherit; font-size:13px;
+    padding:8px 10px; outline:none;
+  }
+  .keypanel button{
+    background:var(--cyan); color:#0F2E29; border:none; font-family:inherit;
+    font-weight:700; font-size:12.5px; padding:0 14px; border-radius:8px; cursor:pointer;
+  }
+
+  .compose{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px 18px 14px;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,.5);
+  }
+  .compose-label{
+    font-size:12px; color:var(--text-dim); margin-bottom:8px;
+    display:flex; justify-content:space-between;
+  }
+  textarea{
+    width:100%; min-height:120px; resize:vertical;
+    background:transparent; border:none; outline:none;
+    color:var(--text); font-family:inherit; font-size:15.5px; line-height:1.75;
+    padding:0;
+  }
+  textarea::placeholder{ color:#5C5175; }
+
+  .compose-foot{
+    display:flex; justify-content:flex-end; align-items:center;
+    margin-top:10px; padding-top:12px; border-top:1px solid var(--line);
+  }
+  button.send{
+    background:var(--pink); color:#26101A; border:none;
+    font-family:inherit; font-weight:700; font-size:14.5px;
+    padding:10px 20px; border-radius:100px; cursor:pointer;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  button.send:hover{ transform:translateY(-1px); }
+  button.send:disabled{ opacity:.5; cursor:default; transform:none; }
+
+  .status{
+    margin-top:18px; color:var(--text-dim); font-size:13.5px;
+    display:none; align-items:center; gap:8px;
+  }
+  .status.show{ display:flex; }
+  .dot{ width:6px;height:6px;border-radius:50%; background:var(--cyan); animation:pulse 1s infinite ease-in-out; }
+  @keyframes pulse{ 0%,100%{opacity:.3;} 50%{opacity:1;} }
+
+  .results{ margin-top:22px; display:none; flex-direction:column; gap:14px; }
+  .results.show{ display:flex; }
+
+  .card{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:16px; padding:18px 20px;
+  }
+  .card-head{
+    display:flex; align-items:center; gap:8px; margin-bottom:12px;
+  }
+  .tag{
+    font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:100px;
+  }
+  .tag.revised{ background:rgba(95,232,214,.15); color:var(--cyan); }
+  .tag.check{ background:rgba(255,198,90,.15); color:var(--warn); }
+
+  .revised-text{
+    font-size:15.5px; line-height:1.85; white-space:pre-wrap;
+    background:var(--panel-2); border-radius:10px; padding:14px 16px;
+  }
+  .copy{
+    margin-top:10px; background:none; border:1px solid var(--line);
+    color:var(--text-dim); font-family:inherit; font-size:12.5px;
+    padding:6px 12px; border-radius:100px; cursor:pointer;
+  }
+  .copy:hover{ color:var(--text); border-color:var(--text-dim); }
+
+  ul.q{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; }
+  ul.q li{
+    font-size:14.5px; line-height:1.7; padding-left:20px; position:relative;
+  }
+  ul.q li::before{
+    content:'?'; position:absolute; left:0; top:0;
+    color:var(--warn); font-weight:900; font-size:13px;
+  }
+  .empty-note{ color:var(--text-dim); font-size:13.5px; }
+
+  .err{
+    margin-top:16px; padding:12px 16px; border-radius:10px;
+    background:rgba(255,111,160,.1); border:1px solid rgba(255,111,160,.3);
+    color:var(--pink); font-size:13.5px; display:none;
+  }
+  .err.show{ display:block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-left"><span class="mark">送信前</span><h1>文チェック</h1></div>
+    <button class="keybtn" id="keyToggle">APIキーを設定</button>
+  </div>
+  <p class="sub">
+    配信のコメント欄やDMで送る前に貼り付けてみてください。<br>
+    そのまま送れる形に整えつつ、足りない情報があれば質問の形で教えます。
+  </p>
+
+  <div class="keypanel" id="keyPanel">
+    <p>
+      このツールを動かすには、あなた自身のAnthropic APIキーが必要です。
+      キーはこの端末のブラウザ内だけに保存され、Anthropicへの通信以外には送られません。
+      <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--cyan)">console.anthropic.comでキーを発行</a>できます。
+    </p>
+    <div class="row">
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+      <button id="saveKeyBtn">保存</button>
+    </div>
+  </div>
+
+  <div class="compose">
+    <div class="compose-label"><span>送りたい文章</span><span id="charcount">0字</span></div>
+    <textarea id="input" placeholder="例）配信のあの場面なんですけどあれって結局どうなったんですか気になって"></textarea>
+    <div class="compose-foot">
+      <button class="send" id="sendBtn">チェックする</button>
+    </div>
+  </div>
+
+  <div class="status" id="status"><span class="dot"></span><span>読んでいます…</span></div>
+  <div class="err" id="err"></div>
+
+  <div class="results" id="results">
+    <div class="card">
+      <div class="card-head"><span class="tag revised">整えた文</span></div>
+      <div class="revised-text" id="revisedText"></div>
+      <button class="copy" id="copyBtn">コピーする</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="tag check">送る前の確認</span></div>
+      <div id="questionsBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const input = document.getElementById('input');
+const charcount = document.getElementById('charcount');
+const sendBtn = document.getElementById('sendBtn');
+const status = document.getElementById('status');
+const results = document.getElementById('results');
+const err = document.getElementById('err');
+const revisedText = document.getElementById('revisedText');
+const questionsBody = document.getElementById('questionsBody');
+const copyBtn = document.getElementById('copyBtn');
+const keyToggle = document.getElementById('keyToggle');
+const keyPanel = document.getElementById('keyPanel');
+const apiKeyInput = document.getElementById('apiKeyInput');
+const saveKeyBtn = document.getElementById('saveKeyBtn');
+
+const KEY_STORAGE = 'bunsho-check-api-key';
+
+function getApiKey() {
+  return localStorage.getItem(KEY_STORAGE) || '';
+}
+function refreshKeyBtn() {
+  const k = getApiKey();
+  keyToggle.textContent = k ? 'APIキー設定済み' : 'APIキーを設定';
+  keyToggle.classList.toggle('set', !!k);
+}
+refreshKeyBtn();
+apiKeyInput.value = getApiKey();
+
+keyToggle.addEventListener('click', () => {
+  keyPanel.classList.toggle('show');
+});
+saveKeyBtn.addEventListener('click', () => {
+  localStorage.setItem(KEY_STORAGE, apiKeyInput.value.trim());
+  refreshKeyBtn();
+  keyPanel.classList.remove('show');
+});
+
+input.addEventListener('input', () => {
+  charcount.textContent = input.value.length + '字';
+});
+
+const SYSTEM_PROMPT = `あなたは、日本語でのオンラインでのやり取り（Vtuberの配信コメント、DM、チャットなど）にまだ慣れていないZ世代のユーザーが、文章を送る前に確認するのを手伝うアシスタントです。
+
+ユーザーの文章にはよく次のような傾向があります:
+・主語や述語が抜けている
+・状況説明が不足していて、読み手には状況がわからない
+・自分の視点だけで書かれていて、話がまとまっていない
+・結局何を伝えたいのか、相手にどう返してほしいのか（感想が欲しい/答えが欲しい/ただの報告か等)が不明瞭
+
+入力された文章に対して、以下を行ってください。
+
+1. revised: 元の意図を保ったまま、主語・述語を補い、状況が伝わるように自然な日本語に整えた文章。ただし本人の口調（カジュアルさ）はできるだけ残す。過度に丁寧語にしすぎない。
+2. issues: 元の文章で情報が足りない点、意図が伝わりにくい点を短く箇条書きで（1項目20字程度、日本語で、責めるような言い方にしない）。特に問題がなければ空配列でよい。
+3. questions: 送る前にユーザー自身が自問して埋めるべき質問を箇条書きで（例:「いつの配信の話か書きましたか？」「相手に感想が欲しいのか、答えが欲しいのか書きましたか？」など、具体的に）。特に問題がなければ空配列でよい。
+
+必ず次のJSON形式のみで出力してください。前置きや説明、Markdownのコードフェンスは一切つけないでください。
+{"revised": "string", "issues": ["string"], "questions": ["string"]}`;
+
+async function checkText() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    keyPanel.classList.add('show');
+    err.textContent = "先にAPIキーを設定してください。";
+    err.classList.add('show');
+    return;
+  }
+
+  sendBtn.disabled = true;
+  status.classList.add('show');
+  results.classList.remove('show');
+  err.classList.remove('show');
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-5",
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: text }]
+      })
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error("APIエラー " + response.status + ": " + errBody.slice(0, 120));
+    }
+
+    const data = await response.json();
+    const raw = data.content.map(b => b.text || "").join("").trim();
+    const clean = raw.replace(/^```json\s*|^```\s*|```$/g, "").trim();
+    const parsed = JSON.parse(clean);
+
+    revisedText.textContent = parsed.revised || text;
+
+    questionsBody.innerHTML = "";
+    const hasIssues = (parsed.issues && parsed.issues.length) || (parsed.questions && parsed.questions.length);
+
+    if (!hasIssues) {
+      const p = document.createElement('p');
+      p.className = 'empty-note';
+      p.textContent = '大きな抜けは見当たりません。この内容で送れそうです。';
+      questionsBody.appendChild(p);
+    } else {
+      if (parsed.issues && parsed.issues.length) {
+        const ul = document.createElement('ul');
+        ul.className = 'q';
+        parsed.issues.forEach(i => {
+          const li = document.createElement('li');
+          li.textContent = i;
+          ul.appendChild(li);
+        });
+        questionsBody.appendChild(ul);
+      }
+      if (parsed.questions && parsed.questions.length) {
+        const ul = document.createElement('ul');
+        ul.className = 'q';
+        ul.style.marginTop = (parsed.issues && parsed.issues.length) ? '12px' : '0';
+        parsed.questions.forEach(q => {
+          const li = document.createElement('li');
+          li.textContent = q;
+          ul.appendChild(li);
+        });
+        questionsBody.appendChild(ul);
+      }
+    }
+
+    results.classList.add('show');
+  } catch (e) {
+    err.textContent = "エラーが発生しました。もう一度試してください。(" + e.message + ")";
+    err.classList.add('show');
+  } finally {
+    sendBtn.disabled = false;
+    status.classList.remove('show');
+  }
+}
+
+sendBtn.addEventListener('click', checkText);
+
+copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(revisedText.textContent);
+  copyBtn.textContent = 'コピーしました';
+  setTimeout(() => { copyBtn.textContent = 'コピーする'; }, 1500);
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
